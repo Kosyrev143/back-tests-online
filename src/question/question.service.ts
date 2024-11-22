@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTestDto } from '../test/dto';
 import { JwtPayloadInterface } from '@auth/interfaces';
 import { PrismaService } from '@prisma/prisma.service';
@@ -8,7 +8,7 @@ import { CreateQuestionDto } from './dto';
 export class QuestionService {
     constructor(private readonly prismaService: PrismaService) {}
 
-    async create(dto: CreateQuestionDto) {
+    async create(dto: CreateQuestionDto, user: JwtPayloadInterface) {
         const _question = await this.prismaService.question.findFirst({
             where: { content: dto.content, testId: dto.testId },
         });
@@ -19,6 +19,10 @@ export class QuestionService {
         const avlTest = await this.prismaService.test.findFirst({ where: { id: dto.testId } });
         if (!avlTest) {
             throw new NotFoundException();
+        }
+
+        if (avlTest.authorId !== user.id) {
+            throw new ForbiddenException();
         }
 
         const question = await this.prismaService.question.create({

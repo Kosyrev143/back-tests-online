@@ -46,15 +46,78 @@ export class TestService {
             },
         });
 
-        // Фильтруем тесты, оставляя только те, у которых у всех вопросов есть хотя бы один правильный ответ
         const filteredTests = tests.filter((test) => {
             return test.questions.every((question) => {
-                // Проверяем, есть ли хотя бы один правильный ответ у каждого вопроса
                 return question.answers.some((answer) => answer.isCorrect === true);
             });
         });
 
-        // Возвращаем тесты с необходимыми полями
+        return filteredTests.map((test) => ({
+            ...test,
+            categoryName: test.Category?.name || null,
+            Category: undefined,
+            categoryId: undefined,
+            questions: undefined,
+        }));
+    }
+
+    async findMyTests(userId: string) {
+        // Получаем тесты, принадлежащие текущему пользователю
+        const tests = await this.prismaService.test.findMany({
+            where: { authorId: userId },
+            include: {
+                questions: {
+                    include: {
+                        answers: true, // Включаем ответы для каждого вопроса
+                    },
+                },
+                Category: {
+                    select: {
+                        name: true,
+                    },
+                },
+            },
+        });
+
+        const filteredTests = tests.filter((test) => {
+            return test.questions.every((question) => {
+                return question.answers.some((answer) => answer.isCorrect === true);
+            });
+        });
+
+        return filteredTests.map((test) => ({
+            ...test,
+            categoryName: test.Category?.name || null,
+            Category: undefined,
+            categoryId: undefined,
+            questions: undefined,
+        }));
+    }
+
+    async findOtherTests(userId: string) {
+        // Получаем тесты, которые не принадлежат текущему пользователю
+        const tests = await this.prismaService.test.findMany({
+            where: { authorId: { not: userId } },
+            include: {
+                questions: {
+                    include: {
+                        answers: true,
+                    },
+                },
+                Category: {
+                    select: {
+                        name: true,
+                    },
+                },
+            },
+        });
+
+        const filteredTests = tests.filter((test) => {
+            return test.questions.every((question) => {
+                return question.answers.some((answer) => answer.isCorrect === true);
+            });
+        });
+
         return filteredTests.map((test) => ({
             ...test,
             categoryName: test.Category?.name || null,

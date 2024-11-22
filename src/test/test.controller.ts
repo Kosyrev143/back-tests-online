@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UnauthorizedException } from '@nestjs/common';
 import { TestService } from './test.service';
 import { CreateTestDto } from './dto';
 import { CurrentUser, Public } from '@common/decorators';
@@ -17,6 +17,24 @@ export class TestController {
     @Get()
     findAll() {
         return this.testService.findAll();
+    }
+
+    @Get('my-tests')
+    findMyTests(@CurrentUser() user: JwtPayloadInterface) {
+        if (!user) {
+            throw new UnauthorizedException();
+        }
+        // Метод для получения тестов текущего пользователя
+        return this.testService.findMyTests(user.id);
+    }
+
+    @Get('other-tests')
+    findOtherTests(@CurrentUser() user: JwtPayloadInterface) {
+        if (!user) {
+            throw new UnauthorizedException();
+        }
+        // Метод для получения тестов, не принадлежащих текущему пользователю
+        return this.testService.findOtherTests(user.id);
     }
 
     @Delete(':id')
