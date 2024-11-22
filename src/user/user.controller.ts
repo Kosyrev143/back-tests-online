@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserResponse } from '@user/responses';
+import { CurrentUser } from '@common/decorators';
+import { JwtPayloadInterface } from '@auth/interfaces';
 
 @Controller('user')
 export class UserController {
@@ -21,8 +23,15 @@ export class UserController {
         return new UserResponse(user);
     }
 
+    @UseInterceptors(ClassSerializerInterceptor)
+    @Get()
+    async findAll(@CurrentUser() user: JwtPayloadInterface) {
+        const users = await this.userService.findAll(user);
+        return users.map((user) => new UserResponse(user));
+    }
+
     @Delete(':id')
-    async delete(@Param('id', ParseUUIDPipe) id: string) {
-        return this.userService.delete(id);
+    async delete(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayloadInterface) {
+        return this.userService.delete(id, user);
     }
 }
