@@ -43,6 +43,7 @@ export class TestService {
                         name: true,
                     },
                 },
+                author: true,
             },
         });
 
