@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { User } from '@prisma/client';
 import { genSaltSync, hashSync } from 'bcrypt';
@@ -34,7 +34,6 @@ export class UserService {
         }
         const user = await this.cacheManager.get<User>(idOrEmail);
         if (!user) {
-            console.log('findOne');
             const user = await this.prismaService.user.findFirst({
                 where: {
                     OR: [{ id: idOrEmail }, { email: idOrEmail }],
@@ -54,6 +53,11 @@ export class UserService {
     }
 
     async delete(id: string, user: JwtPayloadInterface) {
+        const avlUser = await this.prismaService.user.findUnique({ where: { id } });
+        if (!avlUser) {
+            throw new NotFoundException();
+        }
+
         await Promise.all([this.cacheManager.del(user.id), this.cacheManager.del(user.email)]);
         return this.prismaService.user.delete({ where: { id }, select: { id: true } });
     }

@@ -1,9 +1,10 @@
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtPayloadInterface } from '@auth/interfaces';
+import { PassportStrategy } from '@nestjs/passport';
+import { User } from '@prisma/client';
 import { UserService } from '@user/user.service';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { JwtPayloadInterface } from '@auth/interfaces';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -20,7 +21,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     async validate(payload: JwtPayloadInterface) {
-        const user = await this.userService.findOne(payload.id).catch((err) => {
+        const user: User = await this.userService.findOne(payload.id).catch((err) => {
             this.logger.error(err);
             return null;
         });

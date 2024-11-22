@@ -21,6 +21,8 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
   roles     Role[]
   Token     Token[]
+  tests     Test[]
+  Result    Result[]
 
   @@map("users")
 }
@@ -38,4 +40,58 @@ model Token {
 enum Role {
   ADMIN
   USER
+}
+
+model Test {
+  id          String     @id @default(uuid())
+  title       String     @unique
+  description String?    @default("")
+  authorId    String
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  categoryId  String
+  Category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  Result      Result[]
+
+  @@map("tests")
+}
+
+model Question {
+  id      String   @id @default(uuid())
+  content String
+  testId  String
+  test    Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@map("questions")
+}
+
+model Answer {
+  id String @id @default(uuid())
+
+  content    String
+  isCorrect  Boolean
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("answers")
+}
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  tests Test[]
+
+  @@map("categories")
+}
+
+model Result {
+  id     String @id @default(uuid())
+  userId String
+  testId String
+  score  Float
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
+
+  @@map("results")
 }

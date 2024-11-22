@@ -14,6 +14,7 @@ import { CurrentUser, Roles } from '@common/decorators';
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { JwtPayloadInterface } from '@auth/interfaces';
+import { JwtAuthGuard } from '@auth/guards/jwt-auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -35,8 +36,6 @@ export class UserController {
         return users.map((user) => new UserResponse(user));
     }
 
-    @UseGuards(RolesGuard)
-    @Roles(Role.ADMIN)
     @Delete(':id')
     async delete(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayloadInterface) {
         return this.userService.delete(id, user);
