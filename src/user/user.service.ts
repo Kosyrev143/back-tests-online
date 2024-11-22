@@ -5,33 +5,33 @@ import { genSalt, genSaltSync, hash, hashSync } from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prismaService: PrismaService) {}
+    constructor(private readonly prismaService: PrismaService) {}
 
-  save(user: Partial<User>) {
-    const hashedPassword = this.hashedPassword(user.password);
+    save(user: Partial<User>) {
+        const hashedPassword = this.hashedPassword(user.password);
 
-    return this.prismaService.user.create({
-      data: {
-        email: user.email,
-        password: hashedPassword,
-        roles: ['USER'],
-      },
-    });
-  }
+        return this.prismaService.user.create({
+            data: {
+                email: user.email,
+                password: hashedPassword,
+                roles: ['USER'],
+            },
+        });
+    }
 
-  findOne(idOrEmail: string) {
-    return this.prismaService.user.findFirst({
-      where: {
-        OR: [{ id: idOrEmail }, { email: idOrEmail }],
-      },
-    });
-  }
+    findOne(idOrEmail: string) {
+        return this.prismaService.user.findFirst({
+            where: {
+                OR: [{ id: idOrEmail }, { email: idOrEmail }],
+            },
+        });
+    }
 
-  delete(id: string) {
-    return this.prismaService.user.delete({ where: { id } });
-  }
+    delete(id: string) {
+        return this.prismaService.user.delete({ where: { id }, select: { id: true } });
+    }
 
-  private hashedPassword(password: string) {
-    return hashSync(password, genSaltSync(10));
-  }
+    private hashedPassword(password: string) {
+        return hashSync(password, genSaltSync(10));
+    }
 }
