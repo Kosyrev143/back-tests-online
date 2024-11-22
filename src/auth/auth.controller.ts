@@ -29,6 +29,17 @@ export class AuthController {
         private readonly configService: ConfigService,
     ) {}
 
+    @Get('logout')
+    async logout(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response) {
+        if (!refreshToken) {
+            res.sendStatus(HttpStatus.OK);
+            return;
+        }
+        await this.authService.deleteRefreshToken(refreshToken);
+        res.cookie(REFRESH_TOKEN, '', { httpOnly: true, secure: true, expires: new Date() });
+        res.sendStatus(HttpStatus.OK);
+    }
+
     @UseInterceptors(ClassSerializerInterceptor)
     @Post('register')
     async register(@Body() dto: RegisterDto) {
@@ -40,13 +51,12 @@ export class AuthController {
     }
 
     @Post('login')
-    async login(@Body() dto: LoginDto, @Res() res: Response, @UserAgent() userAgent: string) {
-        const tokens = await this.authService.login(dto, userAgent);
+    async login(@Body() dto: LoginDto, @Res() res: Response, @UserAgent() agent: string) {
+        const tokens = await this.authService.login(dto, agent);
         if (!tokens) {
-            throw new BadRequestException('Не получается войти');
+            throw new BadRequestException(`Не получается войти с данными ${JSON.stringify(dto)}`);
         }
-        this.setRefreshTokenToCookie(tokens, res);
-        // return { accessToken: tokens.accessToken };
+        this.setRefreshTokenToCookies(tokens, res);
     }
 
     @Get('refresh-tokens')
@@ -62,10 +72,10 @@ export class AuthController {
         if (!tokens) {
             throw new UnauthorizedException();
         }
-        this.setRefreshTokenToCookie(tokens, res);
+        this.setRefreshTokenToCookies(tokens, res);
     }
 
-    private setRefreshTokenToCookie(tokens: Tokens, res: Response) {
+    private setRefreshTokenToCookies(tokens: Tokens, res: Response) {
         if (!tokens) {
             throw new UnauthorizedException();
         }

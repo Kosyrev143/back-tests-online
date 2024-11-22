@@ -1,4 +1,11 @@
-import { BadRequestException, ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+    BadRequestException,
+    ConflictException,
+    Injectable,
+    Logger,
+    NotFoundException,
+    UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
 import { LoginDto, RegisterDto } from '@auth/dto';
 import { UserService } from '@user/user.service';
@@ -55,19 +62,18 @@ export class AuthService {
         });
     }
 
-    async login(dto: LoginDto, userAgent: string): Promise<Tokens> {
-        const user = await this.userService.findOne(dto.email).catch((err) => {
+    async login(dto: LoginDto, agent: string): Promise<Tokens> {
+        const user: User = await this.userService.findOne(dto.email).catch((err) => {
             this.logger.error(err);
             return null;
         });
         if (!user || !compareSync(dto.password, user.password)) {
-            throw new UnauthorizedException('Неверный логин или пароль');
+            throw new UnauthorizedException('Не верный логин или пароль');
         }
-
-        return this.generateTokens(user, userAgent);
+        return this.generateTokens(user, agent);
     }
 
-    private async generateTokens(user: User, userAgent): Promise<Tokens> {
+    private async generateTokens(user: User, agent: string): Promise<Tokens> {
         const accessToken =
             'Bearer ' +
             this.jwtService.sign({
@@ -75,25 +81,38 @@ export class AuthService {
                 email: user.email,
                 roles: user.roles,
             });
-        const refreshToken = await this.getRefreshToken(user.id, userAgent);
+        const refreshToken = await this.getRefreshToken(user.id, agent);
         return { accessToken, refreshToken };
     }
 
-    private async getRefreshToken(userId: string, userAgent: string): Promise<Token> {
+    private async getRefreshToken(userId: string, agent: string): Promise<Token> {
         const _token = await this.prismaService.token.findFirst({
-            where: { userId, userAgent },
+            where: {
+                userId,
+                userAgent: agent,
+            },
         });
         const token = _token?.token ?? '';
-
         return this.prismaService.token.upsert({
             where: { token },
-            update: {},
+            update: {
+                token: v4(),
+                exp: add(new Date(), { months: 1 }),
+            },
             create: {
                 token: v4(),
                 exp: add(new Date(), { months: 1 }),
                 userId,
-                userAgent: userAgent,
+                userAgent: agent,
             },
         });
+    }
+
+    async deleteRefreshToken(token: string) {
+        const _token = await this.prismaService.token.findUnique({ where: { token } });
+        if (!_token) {
+            throw new NotFoundException();
+        }
+        return this.prismaService.token.delete({ where: { token } });
     }
 }
