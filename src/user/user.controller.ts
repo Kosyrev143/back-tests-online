@@ -11,9 +11,9 @@ import {
 import { UserService } from './user.service';
 import { UserResponse } from '@user/responses';
 import { CurrentUser, Roles } from '@common/decorators';
-import { JwtPayloadInterface } from '@auth/interfaces';
 import { RolesGuard } from '@auth/guards/roles.guard';
 import { Role } from '@prisma/client';
+import { JwtPayloadInterface } from '@auth/interfaces';
 
 @Controller('user')
 export class UserController {
@@ -22,7 +22,7 @@ export class UserController {
     @UseInterceptors(ClassSerializerInterceptor)
     @Get(':idOrEmail')
     async findOne(@Param('idOrEmail') idOrEmail: string) {
-        const user = await this.userService.findOne(idOrEmail);
+        const user = await this.userService.findOne(idOrEmail, true);
         return new UserResponse(user);
     }
 
@@ -38,7 +38,7 @@ export class UserController {
     @UseGuards(RolesGuard)
     @Roles(Role.ADMIN)
     @Delete(':id')
-    async delete(@Param('id', ParseUUIDPipe) id: string) {
-        return this.userService.delete(id);
+    async delete(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: JwtPayloadInterface) {
+        return this.userService.delete(id, user);
     }
 }

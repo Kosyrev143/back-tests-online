@@ -1,12 +1,20 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '@prisma/prisma.service';
-import { Role, User } from '@prisma/client';
-import { genSalt, genSaltSync, hash, hashSync } from 'bcrypt';
+import { User } from '@prisma/client';
+import { genSaltSync, hashSync } from 'bcrypt';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { ConfigService } from '@nestjs/config';
+import { Cache } from 'cache-manager';
+import { convertToSecondsUtil } from '@common/utils';
 import { JwtPayloadInterface } from '@auth/interfaces';
 
 @Injectable()
 export class UserService {
-    constructor(private readonly prismaService: PrismaService) {}
+    constructor(
+        private readonly prismaService: PrismaService,
+        @Inject(CACHE_MANAGER) private cacheManager: Cache,
+        private readonly configService: ConfigService,
+    ) {}
 
     save(user: Partial<User>) {
         const hashedPassword = this.hashedPassword(user.password);
@@ -20,19 +28,33 @@ export class UserService {
         });
     }
 
-    findOne(idOrEmail: string) {
-        return this.prismaService.user.findFirst({
-            where: {
-                OR: [{ id: idOrEmail }, { email: idOrEmail }],
-            },
-        });
+    async findOne(idOrEmail: string, isReset = false): Promise<User> {
+        if (isReset) {
+            await this.cacheManager.del(idOrEmail);
+        }
+        const user = await this.cacheManager.get<User>(idOrEmail);
+        if (!user) {
+            console.log('findOne');
+            const user = await this.prismaService.user.findFirst({
+                where: {
+                    OR: [{ id: idOrEmail }, { email: idOrEmail }],
+                },
+            });
+            if (!user) {
+                return null;
+            }
+            await this.cacheManager.set(idOrEmail, user, convertToSecondsUtil(this.configService.get('JWT_EXP')));
+            return user;
+        }
+        return user;
     }
 
     findAll() {
         return this.prismaService.user.findMany();
     }
 
-    delete() {
+    async delete(id: string, user: JwtPayloadInterface) {
+        await Promise.all([this.cacheManager.del(user.id), this.cacheManager.del(user.email)]);
         return this.prismaService.user.delete({ where: { id }, select: { id: true } });
     }
 
