@@ -46,13 +46,7 @@ export class TestService {
             },
         });
 
-        const filteredTests = tests.filter((test) => {
-            return test.questions.every((question) => {
-                return question.answers.some((answer) => answer.isCorrect === true);
-            });
-        });
-
-        return filteredTests.map((test) => ({
+        return tests.map((test) => ({
             ...test,
             categoryName: test.Category?.name || null,
             Category: undefined,
@@ -76,16 +70,11 @@ export class TestService {
                         name: true,
                     },
                 },
+                author: true,
             },
         });
 
-        const filteredTests = tests.filter((test) => {
-            return test.questions.every((question) => {
-                return question.answers.some((answer) => answer.isCorrect === true);
-            });
-        });
-
-        return filteredTests.map((test) => ({
+        return tests.map((test) => ({
             ...test,
             categoryName: test.Category?.name || null,
             Category: undefined,
@@ -109,6 +98,7 @@ export class TestService {
                         name: true,
                     },
                 },
+                author: true,
             },
         });
 

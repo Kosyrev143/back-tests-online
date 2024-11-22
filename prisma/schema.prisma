@@ -67,14 +67,38 @@ model Question {
 }
 
 model Answer {
-  id String @id @default(uuid())
-
+  id         String         @id @default(uuid())
   content    String
   isCorrect  Boolean
   questionId String
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question   Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  results    ResultAnswer[] // Связь с промежуточной таблицей
 
   @@map("answers")
+}
+
+model Result {
+  id      String         @id @default(uuid())
+  userId  String
+  testId  String
+  score   Float
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test    Test           @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers ResultAnswer[] // Связь с промежуточной таблицей
+
+  @@map("results")
+}
+
+model ResultAnswer {
+  id       String @id @default(uuid())
+  resultId String
+  answerId String
+
+  result Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  answer Answer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@unique([resultId, answerId]) // Гарантируем уникальность пар
+  @@map("result_answers")
 }
 
 model Category {
@@ -83,15 +107,4 @@ model Category {
   tests Test[]
 
   @@map("categories")
-}
-
-model Result {
-  id     String @id @default(uuid())
-  userId String
-  testId String
-  score  Float
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  test   Test   @relation(fields: [testId], references: [id], onDelete: Cascade)
-
-  @@map("results")
 }

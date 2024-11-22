@@ -1,3 +1,4 @@
 ### GET request to example server
-DELETE http://localhost:3000/user/a8edc704-98ca-4632-9cbf-e000fbea1f29
+GET http://localhost:3000/test
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA5NGM4MzdhLTZlYWYtNGMyNi04ODIxLThmZjY1ODAwNTRjNCIsImVtYWlsIjoiaXNsYW1AZ21haWwuY29tIiwicm9sZXMiOlsiQURNSU4iXSwiaWF0IjoxNzMyMjg1MTEzLCJleHAiOjE3MzIzNzE1MTN9.jVNuhXwb_hjptKpulbR7n9KyCqfsu4KV9aXTvcOdKSY
 ###

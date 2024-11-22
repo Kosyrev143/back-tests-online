@@ -13,7 +13,6 @@ export class TestController {
         return this.testService.create(dto, user);
     }
 
-    @Public()
     @Get()
     findAll() {
         return this.testService.findAll();

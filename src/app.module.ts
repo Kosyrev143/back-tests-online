@@ -9,6 +9,7 @@ import { TestModule } from './test/test.module';
 import { CategoryModule } from './category/category.module';
 import { QuestionModule } from './question/question.module';
 import { AnswerModule } from './answer/answer.module';
+import { ResultModule } from './result/result.module';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { AnswerModule } from './answer/answer.module';
         CategoryModule,
         QuestionModule,
         AnswerModule,
+        ResultModule,
     ],
     controllers: [],
     providers: [

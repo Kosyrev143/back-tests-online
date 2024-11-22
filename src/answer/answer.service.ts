@@ -31,6 +31,13 @@ export class AnswerService {
             data: {
                 ...dto,
             },
+            include: {
+                question: {
+                    include: {
+                        test: true,
+                    },
+                },
+            },
         });
         return answer;
     }
