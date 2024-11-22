@@ -28,17 +28,11 @@ export class UserService {
         });
     }
 
-    findAll(user: JwtPayloadInterface) {
-        if (!user.roles.includes(Role.ADMIN)) {
-            throw new ForbiddenException();
-        }
+    findAll() {
         return this.prismaService.user.findMany();
     }
 
-    delete(id: string, user: JwtPayloadInterface) {
-        if (!user.roles.includes(Role.ADMIN)) {
-            throw new ForbiddenException();
-        }
+    delete() {
         return this.prismaService.user.delete({ where: { id }, select: { id: true } });
     }
 

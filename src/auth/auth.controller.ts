@@ -29,7 +29,7 @@ export class AuthController {
         private readonly configService: ConfigService,
     ) {}
 
-    @Get('logout')
+    @Post('logout')
     async logout(@Cookie(REFRESH_TOKEN) refreshToken: string, @Res() res: Response) {
         if (!refreshToken) {
             res.sendStatus(HttpStatus.OK);
