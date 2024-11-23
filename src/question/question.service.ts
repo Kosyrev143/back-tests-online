@@ -44,6 +44,7 @@ export class QuestionService {
 
             include: {
                 answers: true,
+                test: true,
             },
         });
     }

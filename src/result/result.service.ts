@@ -5,7 +5,7 @@ import { PrismaService } from '@prisma/prisma.service';
 export class ResultService {
     constructor(private readonly prismaService: PrismaService) {}
 
-    async recordResult(userId: string, testId: string, answers: string[]) {
+    async recordResult(userId: string, testId: string, answersIds: string[]) {
         // Проверяем существование теста и пользователя
         const test = await this.prismaService.test.findUnique({ where: { id: testId } });
         const user = await this.prismaService.user.findUnique({ where: { id: userId } });
@@ -13,12 +13,17 @@ export class ResultService {
         if (!test || !user) {
             throw new NotFoundException('Test or User not found');
         }
-
+        console.log(answersIds);
         // Проверяем ответы пользователя и подсчитываем правильные
         let correctAnswersCount = 0;
         const allAnswers = await this.prismaService.answer.findMany({
-            where: { id: { in: answers } },
+            where: { id: { in: answersIds } },
         });
+        console.log(allAnswers);
+
+        if (!allAnswers) {
+            throw new NotFoundException();
+        }
 
         allAnswers.forEach((answer) => {
             if (answer.isCorrect) {
@@ -39,7 +44,7 @@ export class ResultService {
         });
 
         // Добавляем ответы в промежуточную таблицу
-        const _resultAnswers = answers.map((answerId) => ({
+        const _resultAnswers = answersIds.map((answerId) => ({
             resultId: result.id,
             answerId,
         }));
